@@ -2,7 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 
-// const usersRoutes = require("./routes/users-routes");
+const usersRoutes = require("./routes/users-routes");
 require('dotenv').config();
 const app = express();
 app.use(bodyParser.json());
@@ -16,7 +16,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// app.use("/api/users", usersRoutes);
+app.use("/api/users", usersRoutes);
 
 mongoose
   .connect(process.env.MONGO_URL)
