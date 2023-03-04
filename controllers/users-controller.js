@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 
 // const HttpError = require("../models/http-error");
-const User = require("../models/user");
+const User = require("../models/User");
 
 
 const getUsers = async (req, res, next) => {
@@ -72,7 +72,7 @@ const signup = async (req, res, next) => {
   try {
     await createdUser.save();
   } catch (err) {
-    const error = new HttpError("Signing up failed, please try again asd. ", 500);
+    const error = new HttpError("Signing up failed, please try again", 500);
     return next(error);
   }
 
@@ -93,7 +93,6 @@ const signup = async (req, res, next) => {
 
 const login = async (req, res, next) => {
     const { email, password } = req.body;
-  
     let existingUser;
   
     try {
