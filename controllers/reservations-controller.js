@@ -34,7 +34,7 @@ const createReservation = async (req, res, next) => {
   const createdReservations = new Reservation({
     start: new Date(),
     title,
-    creator: req.userId,
+    creator: req.body.userid, // use on body object before frontend
   });
 
   let user;
