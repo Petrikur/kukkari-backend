@@ -30,19 +30,21 @@ const createReservation = async (req, res, next) => {
     );
   }
 
-  const {  start, title } = req.body;
+  const {  start, title,userId } = req.body;
   const createdReservations = new Reservation({
-    start: new Date(),
+    startDate:start,
     title,
-    creator: req.body.userid, // use on body object before frontend
+    creator: userId
   });
+
+  console.log(req.body)
 
   let user;
   try {
-    user = await User.findById(req.userData.userId);
+    user = await User.findById(userId);
   } catch (err) {
     const error = new Error(
-      "Creating reservation failed, please try again",
+      "Creating reservation failed, please try again 1",
       500
     );
     return next(error);
@@ -64,7 +66,7 @@ const createReservation = async (req, res, next) => {
     await sess.commitTransaction();
   } catch (err) {
     const error = new Error(
-      "Creating reservation failed, please try again.",
+      "Creating reservation failed, please try again. 2",
       500
     );
     return next(error);
