@@ -7,6 +7,7 @@ const notesRoutes = require("./routes/notes-routes");
 
 const reservationRoutes = require("./routes/reservation-routes")
 require('dotenv').config();
+
 const app = express();
 app.use(bodyParser.json());
 app.use((req, res, next) => {
