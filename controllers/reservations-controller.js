@@ -76,48 +76,53 @@ const createReservation = async (req, res, next) => {
 
 // DELETE reservation
 const deleteReservation = async (req, res, next) => {
-  const reservationId = req.params.pid;
+    const reservationId = req.params.pid;
+    let reservation;
+    
+    try {
+      reservation = await Reservation.findById(reservationId).populate("creator");
+    } catch (err) {
+      const error = new Error(
+        "Something went wrong, could not delete reservation 111.",
+        500
+      );
+      return next(error);
+    }
+  
+    if (!reservation) {
+      const error = new Error("Could not find reservation for this id.", 404);
+      return next(error);
+    }
 
-  let reservation;
-  try {
-    reservation = await Reservation.findById(reservationId).populate("creator");
-  } catch (err) {
-    const error = new Error(
-      "Something went wrong, could not delete reservation.",
-      500
-    );
-    return next(error);
-  }
-
-  if (!reservation) {
-    const error = new Error("Could not find reservation for this id.", 404);
-    return next(error);
-  }
-
-  if (reservation.creator.id !== req.userData.userId) {
+      if (reservation.creator.id !== req.userData.userId) {
+    console.log("userid: " + req.userData.userId)
     const error = new Error("You are not allowed to delete this reservation", 401);
     return next(error);
   }
-
+  
   try {
-    const sess = await mongoose.startSession();
+    let sess;
+    sess = await mongoose.startSession(); // assign the session to sess
     sess.startTransaction();
-    await reservation.remove({ session: sess });
+    await reservation.deleteOne({ session: sess });
+    await sess.commitTransaction();
     reservation.creator.reservations.pull(reservation);
     await reservation.creator.save({ session: sess });
     await sess.commitTransaction();
   } catch (err) {
     const error = new Error(
-      "Something went wrong, could not delete reservation.",
+      "Something went wrong, could not delete reservation33.",
       500
     );
     return next(error);
   }
-
-  res.status(200).json({ message: "Deleted reservation." });
-};
+  
+    res.status(200).json({ message: "Deleted reservation.", userId:reservation.creator });
+  };
 
 exports.getAllReservations = getAllReservations;
 exports.createReservation = createReservation;
 exports.deleteReservation = deleteReservation;
+
+
 
