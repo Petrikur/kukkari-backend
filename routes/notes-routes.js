@@ -20,4 +20,16 @@ router.post(
   notesController.createNote
 );
 
+router.delete("/:pid", notesController.deleteNote);
+
+router.get("/:pid", notesController.getNoteById);
+
+router.patch(
+  "/:pid",
+  [check("title").not().isEmpty(), check("description").isLength({ min: 5 })],
+  notesController.updateNote
+);
+
+
+
 module.exports = router;

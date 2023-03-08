@@ -105,7 +105,6 @@ const deleteReservation = async (req, res, next) => {
     sess = await mongoose.startSession(); // assign the session to sess
     sess.startTransaction();
     await reservation.deleteOne({ session: sess });
-    await sess.commitTransaction();
     reservation.creator.reservations.pull(reservation);
     await reservation.creator.save({ session: sess });
     await sess.commitTransaction();
