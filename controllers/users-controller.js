@@ -146,7 +146,7 @@ const login = async (req, res, next) => {
       return next(error);
     }
   
-    res.json({
+    res.status(200).json({
       userId: existingUser.id,
       email: existingUser.email,
       token:token

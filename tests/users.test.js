@@ -33,3 +33,26 @@ describe("POST /api/users/signup", () => {
       expect(res.body.token.length).toBeGreaterThan(5);
     });
   });
+
+
+  // Test logging in.
+  describe("POST /api/users/login", () => {
+    it("Should return a valid authentication token", async () => {
+    
+      // Then, send a login request with the user's email and password
+      const res = await request(app).post("/api/users/login").send({
+        email: "test3@test.com",
+        password: "test12345",
+      });
+  
+      // Verify that the response contains a valid authentication token
+      expect(res.statusCode).toBe(200);
+      const user = await User.findById(res.body.userId);
+      expect(res.body).toMatchObject({
+                userId: user._id.toString(),
+                email: "test3@test.com",
+                token: expect.any(String),
+              });
+      expect(res.body.token.length).toBeGreaterThan(5);
+    });
+  });
