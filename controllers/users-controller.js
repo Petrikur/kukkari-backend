@@ -20,7 +20,7 @@ const getUsers = async (req, res, next) => {
     return next(error);
   }
   // res.json({ users: users.map((user) => user.toObject({ getters: true })) });
-  res.status(201).json({ users: users });
+  res.status(200).json({ users: users });
 
 };
 
