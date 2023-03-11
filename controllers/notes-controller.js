@@ -16,8 +16,38 @@ const getAllNotes = async (req, res, next) => {
       );
       return next(error);
     }
-    res.json({notes: notes.map(note => note.toObject({ getters: true }))});
+    res.status(200).json({notes: notes.map(note => note.toObject({ getters: true }))});
   };
+
+  
+  // Get note by Id
+  const getNoteById = async (req, res, next) => {
+    const noteId = req.params.pid;
+  
+    let note;
+    try {
+      note = await Note.findById(noteId);
+      
+    } catch (err) {
+      const error = new Error(
+        'Something went wrong, could not find a note.',
+        500
+      );
+      return next(error);
+    }
+  
+    if (!note) {
+      const error = new Error(
+        'Could not find a note for the provided id.',
+        404
+      );
+      return next(error);
+    }
+  
+    ////
+    res.status(200).json({ note: note.toObject({ getters: true }) });
+  };
+
 
   // create note
   const createNote = async (req, res, next) => {
@@ -171,36 +201,8 @@ const deleteNote = async (req, res, next) => {
     res.status(200).json({ note: note.toObject({ getters: true }) });
   };
 
-  // Get note by Id
-  const getNoteById = async (req, res, next) => {
-    const noteId = req.params.pid;
-  
-    let note;
-    try {
-      note = await Note.findById(noteId);
-      
-    } catch (err) {
-      const error = new Error(
-        'Something went wrong, could not find a note.',
-        500
-      );
-      return next(error);
-    }
-  
-    if (!note) {
-      const error = new Error(
-        'Could not find a note for the provided id.',
-        404
-      );
-      return next(error);
-    }
-  
-    ////
-    res.json({ note: note.toObject({ getters: true }) });
-  };
-
 exports.createNote = createNote;
+exports.getNoteById = getNoteById;
 exports.getAllNotes =getAllNotes;
 exports.deleteNote = deleteNote;
 exports.updateNote = updateNote
-exports.getNoteById = getNoteById;

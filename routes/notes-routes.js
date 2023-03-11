@@ -8,10 +8,12 @@ const auth = require("../auth/auth");
 const router = express.Router();
 router.get("/", notesController.getAllNotes);
 
-router.use(auth);
+// router.use(auth);
+
+router.get("/:pid", notesController.getNoteById);
 
 router.post(
-  "/",
+  "/newnote",
   [
     check("title").not().isEmpty(),
     check("description").isLength({ min: 5 }),
@@ -22,7 +24,6 @@ router.post(
 
 router.delete("/:pid", notesController.deleteNote);
 
-router.get("/:pid", notesController.getNoteById);
 
 router.patch(
   "/:pid",

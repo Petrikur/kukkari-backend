@@ -24,6 +24,7 @@ const getUsers = async (req, res, next) => {
 
 };
 
+// signup
 const signup = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -88,7 +89,7 @@ const signup = async (req, res, next) => {
     return next(error);
   }
 
-  res.status(201).json({ userId: createdUser.id, email:createdUser.email, token:token});
+  res.status(201).json({ userId: createdUser.id, email:createdUser.email, token:token, name});
 };
 
 const login = async (req, res, next) => {
