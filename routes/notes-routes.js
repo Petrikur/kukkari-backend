@@ -8,7 +8,7 @@ const auth = require("../auth/auth");
 const router = express.Router();
 router.get("/", notesController.getAllNotes);
 
-// router.use(auth);
+router.use(auth);
 
 router.get("/:pid", notesController.getNoteById);
 

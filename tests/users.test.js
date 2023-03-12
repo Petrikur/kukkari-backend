@@ -12,8 +12,8 @@ afterEach(async () => {
   await mongoose.connection.close();
 });
 
-// Test signup and verify that database contains new user
 
+// Test signup and verify that database contains new user
 describe("POST /api/users/signup", () => {
   it("should return a user", async () => {
     const res = await request(app).post("/api/users/signup").send({
@@ -37,13 +37,11 @@ describe("POST /api/users/signup", () => {
 // Test logging in.
 describe("POST /api/users/login", () => {
   it("Should return a valid authentication token", async () => {
-    // Then, send a login request with the user's email and password
     const res = await request(app).post("/api/users/login").send({
       email: "test3@test.com",
       password: "test12345",
     });
 
-    // Verify that the response contains a valid authentication token
     expect(res.statusCode).toBe(200);
     const user = await User.findById(res.body.userId);
     expect(res.body).toMatchObject({
@@ -58,7 +56,6 @@ describe("POST /api/users/login", () => {
 // Test get all users
 describe("GET /api/users", () => {
   it("should return an array of users", async () => {
-    // Create some test users in the database
     const newUser1 = new User({
       name: "testuser1",
       email: "testuser1@testi.com",
@@ -73,12 +70,10 @@ describe("GET /api/users", () => {
     });
     await newUser2.save();
 
-    //  GET request to retrieve all users
-    const res = await request(app).get("/api/users");
 
+    const res = await request(app).get("/api/users");
     // Verify that the response contains an array of users
     expect(res.statusCode).toBe(200);
-    console.log(res.body.users);
     expect(Array.isArray(res.body.users)).toBe(true);
     expect(res.body.users.length).toBeGreaterThan(0);
     expect(res.body.users[0]).toMatchObject({

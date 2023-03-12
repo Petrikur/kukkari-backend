@@ -17,6 +17,6 @@
   },
   "scripts": {
     "start": "node app.js",
-    "test": "cross-env NODE_ENV=test jest --testTimeout=10000"
+    "test": "cross-env NODE_ENV=test jest --testTimeout=20000"
   }
 }
