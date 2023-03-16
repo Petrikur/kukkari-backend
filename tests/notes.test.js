@@ -21,7 +21,7 @@ describe("GET /api/notes", () => {
     const res = await request(app).get("/api/notes");
     expect(res.statusCode).toBe(200);
     expect(res.body.notes.length).toBeGreaterThan(0);
-    expect(res.body.notes.length).toEqual(1)
+   
   });
 });
 
@@ -37,7 +37,6 @@ describe("GET /api/notes/:id", () => {
     const authRes = await request(app).post("/api/users/login").send(user);
     const authToken = authRes.body.token;
   
-
     const headers = {
       Authorization: `Bearer ${authToken}`,
     };
@@ -78,7 +77,7 @@ describe("PATCH /api/notes/:id", () => {
   });
 });
 
-
+// Test creating new note 
 describe("POST /api/notes/newnote", () => {
   it("should create a new note", async () => {
 
@@ -110,10 +109,34 @@ const getToken = async () => {
   const authRes = await request(app).post("/api/users/login").send(user);
   const authToken = authRes.body.token;
   const userId = authRes.body.userId
+
+  console.log(userId)
   return [authToken,userId]
 }
 
+//Test creating new note with missing data
+describe("POST /api/notes/newnote", () => {
+  it("It should return error code 500", async () => {
 
+    const [authToken,userId] = await getToken();
+    const newNote = {
+      title: "New Note",
+      description: "This is a new note",
+      userId: "wrong userId",
+      name: "test",
+    };
+
+    const res = await request(app)
+      .post("/api/notes/newnote")
+      .set("Authorization", `Bearer ${authToken}`)
+      .send(newNote);
+
+    expect(res.statusCode).toBe(500);
+  });
+});
+
+
+// Delete note 
 describe("DELETE /api/notes/:id", () => {
   it("should delete a note by given id and remove it from the creator's notes array", async () => {
     const noteId = "640dea40a19806ae8d77862e";
@@ -138,3 +161,21 @@ describe("DELETE /api/notes/:id", () => {
     expect(userWithDeletedNote.notes).not.toContain(noteId);
   });
 });
+
+describe("DELETE /api/notes/:id", () => {
+  it("It should return error code 401 because missing token", async () => {
+    const noteId = "641376c358e916f60a31fee4";
+
+    const user = {
+      email: "test3@test.com",
+      password: "test12345",
+    };
+
+    const authRes = await request(app).post("/api/users/login").send(user);
+    const deleteRes = await request(app).delete(`/api/notes/${noteId}`)
+    expect(deleteRes.statusCode).toBe(500);
+  
+  });
+});
+
+

@@ -60,7 +60,7 @@ const getAllNotes = async (req, res, next) => {
   
     const { title, description, name, userId } = req.body;
   
-    console.log(req.body)
+  
     const createdNote = new Note({
       title,
       description,
@@ -72,16 +72,16 @@ const getAllNotes = async (req, res, next) => {
     try {
       user = await User.findById(userId);
     } catch (err) {
-      const error = new Error('Creating note failed, please try again1', 500);
+      const error = new Error('User not exist', 404);
       return next(error);
     }
   
-    if (!user) {
+    if (user == null) {
+      console.log(user)
       const error = new Error('Could not find user for provided id', 404);
       return next(error);
     }
   
-    console.log(user);
   
     let session;
     try {
@@ -93,7 +93,7 @@ const getAllNotes = async (req, res, next) => {
       });
     } catch (err) {
       const error = new Error(
-        'Creating note failed, please try again2.',
+        'Creating note failed, please try again.',
         500
       );
       await session.abortTransaction();
