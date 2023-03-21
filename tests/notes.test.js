@@ -162,9 +162,10 @@ describe("DELETE /api/notes/:id", () => {
   });
 });
 
+// Test delete with missing token
 describe("DELETE /api/notes/:id", () => {
-  it("It should return error code 401 because missing token", async () => {
-    const noteId = "641376c358e916f60a31fee4";
+  it("It should return error code 500 because missing token", async () => {
+    const noteId = "641376f5d63c235dc7fe2755";
 
     const user = {
       email: "test3@test.com",

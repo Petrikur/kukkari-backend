@@ -127,7 +127,7 @@ const deleteNote = async (req, res, next) => {
       return next(error);
     }
 
-    console.log(note.creator)
+    
   
     if (note.creator.id !== req.userData.userId){
       const error = new Error(

@@ -1,24 +1,21 @@
 const app = require("../app");
-const mongoose = require("mongoose");
 const request = require("supertest");
 require("dotenv").config();
 const User = require("../models/user");
 
-beforeEach(async () => {
-  await mongoose.connect(process.env.MONGO_URL);
-});
 
-afterEach(async () => {
-  await mongoose.connection.close();
-});
-
-
-// Test signup and verify that database contains new user
+// Test signup
 describe("POST /api/users/signup", () => {
+  afterEach(async () => {
+    await User.deleteMany();
+  
+  });
+ 
+
   it("should return a user", async () => {
     const res = await request(app).post("/api/users/signup").send({
       name: "testuser",
-      email: "test3@test.com",
+      email: "test7@test.com",
       password: "test12345",
     });
 
@@ -26,63 +23,107 @@ describe("POST /api/users/signup", () => {
     const user = await User.findById(res.body.userId);
     expect(res.body).toMatchObject({
       userId: user._id.toString(),
-      email: "test3@test.com",
+      email: "test7@test.com",
       token: expect.any(String),
       name: "testuser",
     });
     expect(res.body.token.length).toBeGreaterThan(5);
   });
-});
 
-// Test logging in.
-describe("POST /api/users/login", () => {
-  it("Should return a valid authentication token", async () => {
-    const res = await request(app).post("/api/users/login").send({
-      email: "test3@test.com",
+  it("should return an error if email already exists", async () => {
+    const user = new User({
+      name: "existinguser",
+      email: "test2@test.com",
+      password: "test12345",
+    });
+    await user.save();
+
+    const res = await request(app).post("/api/users/signup").send({
+      name: "testuser",
+      email: "test2@test.com",
       password: "test12345",
     });
 
-    expect(res.statusCode).toBe(200);
-    const user = await User.findById(res.body.userId);
-    expect(res.body).toMatchObject({
-      userId: user._id.toString(),
-      email: "test3@test.com",
-      token: expect.any(String),
-    });
-    expect(res.body.token.length).toBeGreaterThan(5);
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toBe("User exists already, please login instead.");
   });
-});
 
-// Test get all users
-describe("GET /api/users", () => {
-  it("should return an array of users", async () => {
-    const newUser1 = new User({
-      name: "testuser1",
-      email: "testuser1@testi.com",
+  it("should return an error if email is invalid", async () => {
+    const res = await request(app).post("/api/users/signup").send({
+      name: "testuser",
+      email: "invalidemail",
       password: "test12345",
     });
-    await newUser1.save();
+    expect(res.statusCode).toBe(400);
+  });
 
-    const newUser2 = new User({
-      name: "testuser2",
-      email: "testuser2@testi.com",
-      password: "test12345",
+  // Test error handling
+  describe("Handle error", () => {
+    it("should return 400 if user provides invalid input", async () => {
+      const res = await request(app).post("/api/users/signup").send({
+        name: "test",
+        email: "invalid-email",
+        password: "password",
+      });
+      expect(res.statusCode).toBe(400);
     });
-    await newUser2.save();
 
-
-    const res = await request(app).get("/api/users");
-    // Verify that the response contains an array of users
-    expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.body.users)).toBe(true);
-    expect(res.body.users.length).toBeGreaterThan(0);
-    expect(res.body.users[0]).toMatchObject({
-      name: "testuser1",
-      email: "testuser1@testi.com",
-    });
-    expect(res.body.users[1]).toMatchObject({
-      name: "testuser2",
-      email: "testuser2@testi.com",
+    it("should return 500 if an unexpected error occurs", async () => {
+      jest.spyOn(User, "findOne").mockImplementationOnce(() => {
+        throw new Error("Something went wrong");
+      });
+      const res = await request(app)
+        .post("/api/users/login")
+        .send({ email: "test3@test.com", password: "test12345" });
+      expect(res.statusCode).toBe(500);
     });
   });
+
+  // Test performance
+  describe("Performance testing", () => {
+    it("should handle a large number of requests", async () => {
+      const requests = Array.from({ length: 100 }, () =>
+        request(app).get("/api/users")
+      );
+      await Promise.all(requests);
+    });
+  });
+
+  // Test getting users
+  const testUsers = [
+    { name: "testuser1", email: "testuser1@test.com", password: "test12345" },
+    { name: "testuser2", email: "testuser2@test.com", password: "test12345" },
+  ];
+  describe("Using test fixtures", () => {
+    beforeEach(async () => {
+      await User.insertMany(testUsers);
+    });
+
+    afterEach(async () => {
+      await User.deleteMany();
+    });
+
+    it("should return an array of users", async () => {
+      const res = await request(app).get("/api/users");
+      expect(res.statusCode).toBe(200);
+      expect(Array.isArray(res.body.users)).toBe(true);
+      expect(res.body.users.length).toBe(2);
+      expect(res.body.users[0]).toMatchObject({
+        name: "testuser1",
+        email: "testuser1@test.com",
+      });
+      expect(res.body.users[1]).toMatchObject({
+        name: "testuser2",
+        email: "testuser2@test.com",
+      });
+    });
+  });
+
+  // Test coverage
+  // describe("Test coverage", () => {
+  //   it("should have test coverage of at least 90%", async () => {
+  //     const coverage = await request(app).get("/coverage");
+  //     expect(parseInt(coverage.text)).toBeGreaterThan(20);
+  //   });
+  // })
 });

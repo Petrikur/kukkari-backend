@@ -13,10 +13,12 @@
   },
   "devDependencies": {
     "jest": "^29.5.0",
+    "mongodb-memory-server": "^8.12.1",
     "nodemon": "^2.0.21"
   },
   "scripts": {
     "start": "node app.js",
-    "test": "cross-env NODE_ENV=test jest --testTimeout=20000"
+    "test": "jest --detectOpenHandles",
+    "test:unit": "jest"
   }
 }

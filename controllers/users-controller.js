@@ -28,9 +28,11 @@ const getUsers = async (req, res, next) => {
 const signup = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return next(
-      new Error("Invalid inputs passed, please check your data.", 422)
-    );
+    
+      const error  = new Error("Invalid inputs passed, please check your data.")
+      error.statusCode = 400;
+      return next(error)
+  
   }
   const { name, email, password } = req.body;
 
@@ -39,18 +41,16 @@ const signup = async (req, res, next) => {
     existingUser = await User.findOne({ email: email });
   } catch (err) {
     const error = new Error(
-      "Signing up failed, please try again later asd.",
+      "Signing up failed, please try again later",
       500
     );
     return next(error);
   }
 
   if (existingUser) {
-    const error = new Error(
-      "User exists already, please login instead.",
-      422
-    );
-    return next(error);
+    return res.status(400).json({
+      message: "User exists already, please login instead."
+    });
   }
 
   let hashedPassword;
