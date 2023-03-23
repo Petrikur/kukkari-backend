@@ -8,6 +8,6 @@ const noteSchema = new Schema({
     name: {type:String,required:true},
     creator: { type: mongoose.Types.ObjectId, required: true, ref: 'User'},
    
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('Note', noteSchema);

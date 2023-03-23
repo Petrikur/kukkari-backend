@@ -8,6 +8,6 @@ const reservationSchema = new Schema({
     // end: {type: Date,required:true},
     creator: { type: mongoose.Types.ObjectId, required: true, ref: 'User'},
     title: {type :String,required:true}
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('Reservation', reservationSchema);
