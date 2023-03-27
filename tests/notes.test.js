@@ -1,19 +1,18 @@
 const app = require("../app");
-const mongoose = require("mongoose");
+
 const request = require("supertest");
 
-const Note = require("../models/note")
-const User = require("../models/user")
+const Note = require("../models/note");
+const User = require("../models/user");
 require("dotenv").config();
 
-beforeEach(async () => {
-  await mongoose.connect(process.env.MONGO_URL);
-});
+// beforeEach(async () => {
+//   await mongoose.connect(process.env.MONGO_URL);
+// });
 
-afterEach(async () => {
-  await mongoose.connection.close();
-});
-
+// afterEach(async () => {
+//   await mongoose.connection.close();
+// });
 
 // Test getting all notes
 describe("GET /api/notes", () => {
@@ -21,7 +20,7 @@ describe("GET /api/notes", () => {
     const res = await request(app).get("/api/notes");
     expect(res.statusCode).toBe(200);
     expect(res.body.notes.length).toBeGreaterThan(0);
-   
+
   });
 });
 
@@ -36,7 +35,7 @@ describe("GET /api/notes/:id", () => {
 
     const authRes = await request(app).post("/api/users/login").send(user);
     const authToken = authRes.body.token;
-  
+
     const headers = {
       Authorization: `Bearer ${authToken}`,
     };
@@ -77,48 +76,11 @@ describe("PATCH /api/notes/:id", () => {
   });
 });
 
-// Test creating new note 
-describe("POST /api/notes/newnote", () => {
-  it("should create a new note", async () => {
-
-    const [authToken,userId] = await getToken();
-    const newNote = {
-      title: "New Note",
-      description: "This is a new note",
-      userId: userId,
-      name: "test",
-    };
-
-    const res = await request(app)
-      .post("/api/notes/newnote")
-      .set("Authorization", `Bearer ${authToken}`)
-      .send(newNote);
-
-    expect(res.statusCode).toBe(201);
-    expect(res.body.note.title).toBe("New Note");
-    expect(res.body.note.description).toBe("This is a new note");
-  });
-});
-
-const getToken = async () => {
-  const user = {
-    email: "test3@test.com",
-    password: "test12345",
-  };
-
-  const authRes = await request(app).post("/api/users/login").send(user);
-  const authToken = authRes.body.token;
-  const userId = authRes.body.userId
-
-  console.log(userId)
-  return [authToken,userId]
-}
-
 //Test creating new note with missing data
 describe("POST /api/notes/newnote", () => {
   it("It should return error code 500", async () => {
 
-    const [authToken,userId] = await getToken();
+    const [authToken,userId] = await getTokenAndUserId();
     const newNote = {
       title: "New Note",
       description: "This is a new note",
@@ -130,13 +92,11 @@ describe("POST /api/notes/newnote", () => {
       .post("/api/notes/newnote")
       .set("Authorization", `Bearer ${authToken}`)
       .send(newNote);
-
     expect(res.statusCode).toBe(500);
   });
 });
 
-
-// Delete note 
+// Delete note
 describe("DELETE /api/notes/:id", () => {
   it("should delete a note by given id and remove it from the creator's notes array", async () => {
     const noteId = "640dea40a19806ae8d77862e";
@@ -148,7 +108,6 @@ describe("DELETE /api/notes/:id", () => {
 
     const authRes = await request(app).post("/api/users/login").send(user);
     const authToken = authRes.body.token;
-
     const deleteRes = await request(app)
       .delete(`/api/notes/${noteId}`)
       .set("Authorization", `Bearer ${authToken}`);
@@ -175,8 +134,51 @@ describe("DELETE /api/notes/:id", () => {
     const authRes = await request(app).post("/api/users/login").send(user);
     const deleteRes = await request(app).delete(`/api/notes/${noteId}`)
     expect(deleteRes.statusCode).toBe(500);
+
+  });
+});
   
+// Test create new note 
+describe("POST /api/notes/newnote", () => {
+  it("should create a new note", async () => {
+    const [userId, authToken] = await getTokenAndUserId();
+    console.log("userid:" + userId + "token:" + authToken);
+
+    const newNote = {
+      title: "New Note",
+      description: "This is a new note",
+      userId: userId,
+      name: "test",
+    };
+
+    const res = await request(app)
+    .post("/api/notes/newnote")
+    .set("Authorization", `Bearer ${authToken}`)
+    .send(newNote);
+    expect(res.statusCode).toBe(201);
+    expect(res.body.note.title).toBe("New Note");
+    expect(res.body.note.description).toBe("This is a new note");
   });
 });
 
+// Function to get token and user id 
+const getTokenAndUserId = async () => {
+  const signUpInfo = {
+    name: "test name ",
+    email: "test3@test.com",
+    password: "test12345",
+  };
+  const signupRes = await request(app)
+    .post("/api/users/signup")
+    .send(signUpInfo);
 
+  const loginInfo = {
+    email: "test3@test.com",
+    password: "test12345",
+  };
+
+  const loginRes = await request(app).post("/api/users/login").send(loginInfo);
+  const authToken = loginRes.body.token;
+  const userId = loginRes.body.userId;
+  return [userId, authToken];
+};
