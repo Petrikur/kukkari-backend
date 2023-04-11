@@ -6,7 +6,7 @@ const { validationResult } = require("express-validator");
 // const Error = require("../models/http-error");
 const User = require("../models/User");
 
-
+// get users 
 const getUsers = async (req, res, next) => {
   let users;
   try {
@@ -21,7 +21,29 @@ const getUsers = async (req, res, next) => {
   }
   // res.json({ users: users.map((user) => user.toObject({ getters: true })) });
   res.status(200).json({ users: users });
+};
 
+// get user name by id 
+const getUserById = async (req, res, next) => {
+  const userId = req.params.uid;
+
+  let user;
+  try {
+    user = await User.findById(userId, "name");
+  } catch (err) {
+    const error = new Error(
+      "Fetching user failed, please try again later.",
+      500
+    );
+    return next(error);
+  }
+
+  if (!user) {
+    const error = new Error("Could not find a user for the provided id.", 404);
+    return next(error);
+  }
+
+  res.json({ name: user.name });
 };
 
 // signup
@@ -93,6 +115,7 @@ const signup = async (req, res, next) => {
 };
 
 const login = async (req, res, next) => {
+  console.log(req.body)
     const { email, password } = req.body;
     let existingUser;
   
@@ -128,8 +151,7 @@ const login = async (req, res, next) => {
   
     if (!isValidPassword) {
       const error = new Error(
-        "Invalid credentials, could not log you in.",
-        403
+        "Invalid credentials, could not log you in."
       );
       return next(error);
     }
@@ -152,7 +174,7 @@ const login = async (req, res, next) => {
       token:token
     });
   };
-
+exports.getUserById = getUserById;
 exports.getUsers = getUsers;
 exports.signup = signup;
 exports.login = login;
