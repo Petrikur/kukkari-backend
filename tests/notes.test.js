@@ -142,8 +142,6 @@ describe("DELETE /api/notes/:id", () => {
 describe("POST /api/notes/newnote", () => {
   it("should create a new note", async () => {
     const [userId, authToken] = await getTokenAndUserId();
-    console.log("userid:" + userId + "token:" + authToken);
-
     const newNote = {
       title: "New Note",
       description: "This is a new note",

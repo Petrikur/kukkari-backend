@@ -37,8 +37,6 @@ const createReservation = async (req, res, next) => {
     creator: userId
   });
 
-  console.log(req.body)
-
   let user;
   try {
     user = await User.findById(userId);
@@ -54,8 +52,6 @@ const createReservation = async (req, res, next) => {
     const error = new Error("Could not find user for provided id", 404);
     return next(error);
   }
-
-  console.log(user);
 
   try {
     const sess = await mongoose.startSession();
@@ -95,7 +91,6 @@ const deleteReservation = async (req, res, next) => {
     }
 
       if (reservation.creator.id !== req.userData.userId) {
-    console.log("userid: " + req.userData.userId)
     const error = new Error("You are not allowed to delete this reservation", 401);
     return next(error);
   }
