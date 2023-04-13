@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 
 const Reservation = require("../models/Reservation");
 const User = require("../models/User");
+const HttpError = require("../models/http-error")
 
 // Get reservations
 const getAllReservations = async (req, res, next) => {
@@ -11,7 +12,7 @@ const getAllReservations = async (req, res, next) => {
   try {
     reservations = await Reservation.find();
   } catch (err) {
-    const error = new Error(
+    const error = new HttpError(
       'Fetching reservations failed, please try again later.',
       500
     );
@@ -26,7 +27,7 @@ const createReservation = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return next(
-      new Error("Invalid inputs passed, please check your data.", 422)
+      new HttpError("Invalid inputs passed, please check your data.", 422)
     );
   }
 
@@ -41,7 +42,7 @@ const createReservation = async (req, res, next) => {
   try {
     user = await User.findById(userId);
   } catch (err) {
-    const error = new Error(
+    const error = new HttpError(
       "Creating reservation failed, please try again 1",
       500
     );
@@ -49,7 +50,7 @@ const createReservation = async (req, res, next) => {
   }
 
   if (!user) {
-    const error = new Error("Could not find user for provided id", 404);
+    const error = new HttpError("Could not find user for provided id", 404);
     return next(error);
   }
 
@@ -61,7 +62,7 @@ const createReservation = async (req, res, next) => {
     await user.save({ session: sess });
     await sess.commitTransaction();
   } catch (err) {
-    const error = new Error(
+    const error = new HttpError(
       "Creating reservation failed, please try again. 2",
       500
     );
@@ -78,7 +79,7 @@ const deleteReservation = async (req, res, next) => {
     try {
       reservation = await Reservation.findById(reservationId).populate("creator");
     } catch (err) {
-      const error = new Error(
+      const error = new HttpError(
         "Something went wrong, could not delete reservation 111.",
         500
       );
@@ -86,12 +87,12 @@ const deleteReservation = async (req, res, next) => {
     }
   
     if (!reservation) {
-      const error = new Error("Could not find reservation for this id.", 404);
+      const error = new HttpError("Could not find reservation for this id.", 404);
       return next(error);
     }
 
       if (reservation.creator.id !== req.userData.userId) {
-    const error = new Error("You are not allowed to delete this reservation", 401);
+    const error = new HttpError("You are not allowed to delete this reservation", 401);
     return next(error);
   }
   
@@ -104,7 +105,7 @@ const deleteReservation = async (req, res, next) => {
     await reservation.creator.save({ session: sess });
     await sess.commitTransaction();
   } catch (err) {
-    const error = new Error(
+    const error = new HttpError(
       "Something went wrong, could not delete reservation33.",
       500
     );

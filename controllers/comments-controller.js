@@ -3,6 +3,7 @@ const Note = require("../models/Note");
 const Comment = require("../models/comment")
 const mongoose = require("mongoose")
 const { validationResult } = require("express-validator");
+const HttpError = require("../models/http-error")
 
 // function to create a new comment
 const createComment = async (req, res, next) => {
@@ -25,7 +26,7 @@ const createComment = async (req, res, next) => {
     try {
       comment = await Comment.findById(commentId);
     } catch (err) {
-      const error = new Error(
+      const error = new HttpError(
         "Something went wrong, could not delete comment.",
         500
       );
@@ -33,12 +34,12 @@ const createComment = async (req, res, next) => {
     }
   
     if (!comment) {
-      const error = new Error("Could not find comment for this id.", 404);
+      const error = new HttpError("Could not find comment for this id.", 404);
       return next(error);
     }
   
     if (comment.author.toString() !== req.userData.userId) {
-      const error = new Error("You are not allowed to delete this comment", 401);
+      const error = new HttpError("You are not allowed to delete this comment", 401);
       return next(error);
     }
   
@@ -53,7 +54,7 @@ const createComment = async (req, res, next) => {
       );
       await sess.commitTransaction();
     } catch (err) {
-      const error = new Error(
+      const error = new HttpError(
         "Something went wrong, could not delete comment.",
         500
       );

@@ -1,25 +1,24 @@
-
 // notes-controller.js
 const { validationResult } = require("express-validator");
 const mongoose = require("mongoose");
 const Note = require("../models/Note");
 const User = require("../models/User");
-const Comment = require("../models/comment")
-
+const Comment = require("../models/comment");
+const HttpError = require("../models/http-error");
 // Get comments
 const getComments = async (req, res) => {
   const { id } = req.params;
   try {
-    const note = await Note.findById(id).populate('comments');
+    const note = await Note.findById(id).populate("comments");
     if (!note) {
-      return res.status(404).json({ error: 'Note not found' });
+      return res.status(404).json({ error: "Note not found" });
     }
     const comments = note.comments;
     return res.json({ comments });
   } catch (error) {
-    return res.status(500).json({ error: 'Server error' });
+    return res.status(500).json({ error: "Server error" });
   }
-}
+};
 
 // Get notes
 const getAllNotes = async (req, res, next) => {
@@ -27,7 +26,7 @@ const getAllNotes = async (req, res, next) => {
   try {
     notes = await Note.find({}).populate("comments");
   } catch (err) {
-    const error = new Error(
+    const error = new HttpError(
       "Fetching notes failed, please try again later.",
       500
     );
@@ -46,7 +45,7 @@ const getNoteById = async (req, res, next) => {
   try {
     note = await Note.findById(noteId);
   } catch (err) {
-    const error = new Error(
+    const error = new HttpError(
       "Something went wrong, could not find a note.",
       500
     );
@@ -54,20 +53,25 @@ const getNoteById = async (req, res, next) => {
   }
 
   if (!note) {
-    const error = new Error("Could not find a note for the provided id.", 404);
+    const error = new HttpError(
+      "Could not find a note for the provided id.",
+      404
+    );
     return next(error);
   }
 
   res.status(200).json({ note: note.toObject({ getters: true }) });
 };
 
- // Create new note 
+// Create new note
 const createNote = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return next(
-      new Error("Invalid inputs passed, please check your data.", 422)
+    const error = new HttpError(
+      "Invalid inputs passed, please check your data.",
+      422
     );
+    return next(error);
   }
 
   const { title, description, name, userId } = req.body;
@@ -88,14 +92,14 @@ const createNote = async (req, res, next) => {
 
     const user = await User.findById(userId).session(session);
     if (!user) {
-      throw new Error("Could not find user for provided id");
+      return next(new HttpError("Could not find user for provided id",404)) 
     }
     user.notes.push(createdNote);
     await user.save({ session });
     await session.commitTransaction();
   } catch (err) {
     await session.abortTransaction();
-    next(new Error("Creating note failed, please try again."));
+    next(new HttpError("Creating note failed, please try again.", 500));
   } finally {
     session.endSession();
   }
@@ -110,7 +114,7 @@ const deleteNote = async (req, res, next) => {
   try {
     note = await Note.findById(noteId).populate("creator");
   } catch (err) {
-    const error = new Error(
+    const error = new HttpError(
       "Something went wrong, could not delete note.",
       500
     );
@@ -118,12 +122,12 @@ const deleteNote = async (req, res, next) => {
   }
 
   if (!note) {
-    const error = new Error("Could not find note for this id.", 404);
+    const error = new HttpError("Could not find note for this id.", 404);
     return next(error);
   }
 
   if (note.creator.id !== req.userData.userId) {
-    const error = new Error("You are not allowed to delete this note", 401);
+    const error = new HttpError("You are not allowed to delete this note", 401);
     return next(error);
   }
 
@@ -136,7 +140,7 @@ const deleteNote = async (req, res, next) => {
     await note.creator.save({ session: sess });
     await sess.commitTransaction();
   } catch (err) {
-    const error = new Error(
+    const error = new HttpError(
       "Something went wrong, could not delete note.",
       500
     );
@@ -150,9 +154,12 @@ const deleteNote = async (req, res, next) => {
 const updateNote = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return next(
-      new Error("Invalid inputs passed, please check your data.", 422)
+    const error = new HttpError(
+      "Invalid inputs passed, please check your data.",
+      422
     );
+
+    return next(error);
   }
 
   const { title, description } = req.body;
@@ -161,7 +168,7 @@ const updateNote = async (req, res, next) => {
   try {
     note = await Note.findById(noteId);
   } catch (err) {
-    const error = new Error(
+    const error = new HttpError(
       "Something went wrong, could not update note.",
       500
     );
@@ -169,7 +176,7 @@ const updateNote = async (req, res, next) => {
   }
 
   if (note.creator.toString() !== req.userData.userId) {
-    const error = new Error("You are not allowed to edit this note", 401);
+    const error = new HttpError("You are not allowed to edit this note", 401);
     return next(error);
   }
 
@@ -179,7 +186,7 @@ const updateNote = async (req, res, next) => {
   try {
     await note.save();
   } catch (err) {
-    const error = new Error(
+    const error = new HttpError(
       "Something went wrong, could not update note.",
       500
     );
@@ -194,4 +201,4 @@ exports.getNoteById = getNoteById;
 exports.getAllNotes = getAllNotes;
 exports.deleteNote = deleteNote;
 exports.updateNote = updateNote;
-exports.getComments = getComments
+exports.getComments = getComments;

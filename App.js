@@ -36,6 +36,8 @@ const startServer = async () => {
   console.log('Server running');
 };
 
+
+
 // Get coverage
 app.get("/coverage", async (req, res, next) => {
   const coverage = await fs.promises.readFile("./coverage/coverage-summary.json", "utf-8");
@@ -49,6 +51,15 @@ app.use('/api/users', usersRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/comments', commentsRoutes);
+
+// Errors
+app.use((error, req, res, next) => {
+  if (res.headerSent) {
+    return next(error);
+  }
+  res.status(error.code || 500);
+  res.json({ message: error.message || "An unknown error occurred!" });
+});
 
 startServer().catch((err) => {
   console.log(err);
