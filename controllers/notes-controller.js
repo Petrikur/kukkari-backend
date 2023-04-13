@@ -4,6 +4,7 @@ const { validationResult } = require("express-validator");
 const mongoose = require("mongoose");
 const Note = require("../models/Note");
 const User = require("../models/User");
+const Comment = require("../models/comment")
 
 // Get comments
 const getComments = async (req, res) => {
@@ -129,6 +130,7 @@ const deleteNote = async (req, res, next) => {
   try {
     const sess = await mongoose.startSession();
     sess.startTransaction();
+    await Comment.deleteMany({ noteId: noteId }, { session: sess }); // Delete comments associated with note
     await Note.deleteOne({ _id: noteId }, { session: sess });
     note.creator.notes.pull(note);
     await note.creator.save({ session: sess });
