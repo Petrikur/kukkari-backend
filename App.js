@@ -7,6 +7,7 @@ const fs = require('fs');
 const usersRoutes = require('./routes/users-routes');
 const notesRoutes = require('./routes/notes-routes');
 const reservationRoutes = require('./routes/reservation-routes');
+const commentsRoutes = require("./routes/comments-routes")
 require('dotenv').config();
 
 const app = express();
@@ -20,8 +21,6 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE');
   next();
 });
-
-
 
 const startServer = async () => {
   if (process.env.NODE_ENV === 'test') {
@@ -49,6 +48,7 @@ app.get("/coverage", async (req, res, next) => {
 app.use('/api/users', usersRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/notes', notesRoutes);
+app.use('/api/comments', commentsRoutes);
 
 startServer().catch((err) => {
   console.log(err);

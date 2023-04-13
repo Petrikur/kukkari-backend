@@ -1,13 +1,30 @@
+
+// notes-controller.js
 const { validationResult } = require("express-validator");
 const mongoose = require("mongoose");
 const Note = require("../models/Note");
 const User = require("../models/User");
 
+// Get comments
+const getComments = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const note = await Note.findById(id).populate('comments');
+    if (!note) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+    const comments = note.comments;
+    return res.json({ comments });
+  } catch (error) {
+    return res.status(500).json({ error: 'Server error' });
+  }
+}
+
 // Get notes
 const getAllNotes = async (req, res, next) => {
   let notes;
   try {
-    notes = await Note.find({});
+    notes = await Note.find({}).populate("comments");
   } catch (err) {
     const error = new Error(
       "Fetching notes failed, please try again later.",
@@ -175,3 +192,4 @@ exports.getNoteById = getNoteById;
 exports.getAllNotes = getAllNotes;
 exports.deleteNote = deleteNote;
 exports.updateNote = updateNote;
+exports.getComments = getComments
