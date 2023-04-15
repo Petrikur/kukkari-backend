@@ -1,10 +1,9 @@
-
 const { validationResult } = require("express-validator");
 const mongoose = require("mongoose");
 
 const Reservation = require("../models/Reservation");
 const User = require("../models/User");
-const HttpError = require("../models/http-error")
+const HttpError = require("../models/http-error");
 
 // Get reservations
 const getAllReservations = async (req, res, next) => {
@@ -13,14 +12,17 @@ const getAllReservations = async (req, res, next) => {
     reservations = await Reservation.find();
   } catch (err) {
     const error = new HttpError(
-      'Fetching reservations failed, please try again later.',
+      "Fetching reservations failed, please try again later.",
       500
     );
     return next(error);
   }
-  res.json({reservations: reservations.map(reservation => reservation.toObject({ getters: true }))});
+  res.json({
+    reservations: reservations.map((reservation) =>
+      reservation.toObject({ getters: true })
+    ),
+  });
 };
-
 
 // Create reservation
 const createReservation = async (req, res, next) => {
@@ -31,12 +33,14 @@ const createReservation = async (req, res, next) => {
     );
   }
 
-  const {  start, title,userId } = req.body;
+  const { startDate, endDate, userId, creatorName } = req.body;
   const createdReservations = new Reservation({
-    startDate:start,
-    title,
-    creator: userId
+    startDate,
+    endDate,
+    creator: userId,
+    creatorName,
   });
+
 
   let user;
   try {
@@ -73,29 +77,32 @@ const createReservation = async (req, res, next) => {
 
 // DELETE reservation
 const deleteReservation = async (req, res, next) => {
-    const reservationId = req.params.pid;
-    let reservation;
-    
-    try {
-      reservation = await Reservation.findById(reservationId).populate("creator");
-    } catch (err) {
-      const error = new HttpError(
-        "Something went wrong, could not delete reservation 111.",
-        500
-      );
-      return next(error);
-    }
-  
-    if (!reservation) {
-      const error = new HttpError("Could not find reservation for this id.", 404);
-      return next(error);
-    }
+  const reservationId = req.params.pid;
+  let reservation;
 
-      if (reservation.creator.id !== req.userData.userId) {
-    const error = new HttpError("You are not allowed to delete this reservation", 401);
+  try {
+    reservation = await Reservation.findById(reservationId).populate("creator");
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not delete reservation 111.",
+      500
+    );
     return next(error);
   }
-  
+
+  if (!reservation) {
+    const error = new HttpError("Could not find reservation for this id.", 404);
+    return next(error);
+  }
+
+  if (reservation.creator.id !== req.userData.userId) {
+    const error = new HttpError(
+      "You are not allowed to delete this reservation",
+      401
+    );
+    return next(error);
+  }
+
   try {
     let sess;
     sess = await mongoose.startSession(); // assign the session to sess
@@ -111,13 +118,12 @@ const deleteReservation = async (req, res, next) => {
     );
     return next(error);
   }
-  
-    res.status(200).json({ message: "Deleted reservation.", userId:reservation.creator });
-  };
+
+  res
+    .status(200)
+    .json({ message: "Deleted reservation.", userId: reservation.creator });
+};
 
 exports.getAllReservations = getAllReservations;
 exports.createReservation = createReservation;
 exports.deleteReservation = deleteReservation;
-
-
-
