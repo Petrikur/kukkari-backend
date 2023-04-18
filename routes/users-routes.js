@@ -2,9 +2,11 @@ const express = require('express');
 const { check } = require('express-validator');
 
 const usersController = require("../controllers/users-controller")
-
-const auth = require("../auth/auth");
 const router = express.Router();
+const auth = require("../auth/auth");
+
+router.post("/forgotpassword", usersController.forgotPassword)
+router.post("/:id/:token",usersController.passwordReset)
 
 router.post(
   '/signup',
@@ -21,12 +23,8 @@ router.post(
 );
 
 router.post('/login', usersController.login);
-
 router.use(auth);
-
 router.get('/:uid', usersController.getUserById);
 router.get('/', usersController.getUsers);
-
-
 
 module.exports = router;
