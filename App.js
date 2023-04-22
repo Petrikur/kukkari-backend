@@ -8,6 +8,7 @@ const usersRoutes = require('./routes/users-routes');
 const notesRoutes = require('./routes/notes-routes');
 const reservationRoutes = require('./routes/reservation-routes');
 const commentsRoutes = require("./routes/comments-routes")
+const weatherRoutes = require("./routes/weather-routes")
 require('dotenv').config();
 
 const app = express();
@@ -51,6 +52,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/comments', commentsRoutes);
+app.use('/api/weather', weatherRoutes);
 
 // Errors
 app.use((error, req, res, next) => {
