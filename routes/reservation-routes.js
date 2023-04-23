@@ -4,6 +4,7 @@ const reservationsController = require("../controllers/reservations-controller")
 const router = express.Router();
 
 const auth = require("../auth/auth");
+const rateLimiter = require("../middleware/rateLimiter");
 
 // router.get('/:pid', reservationsController.getReservationById);
 router.get("/", reservationsController.getAllReservations);
@@ -16,7 +17,7 @@ router.post(
   [
     check("startDate").not().isEmpty().toDate(),
     check("endDate").not().isEmpty().toDate(),
-  ],
+  ],rateLimiter,
   reservationsController.createReservation
 );
 

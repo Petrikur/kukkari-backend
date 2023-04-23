@@ -4,6 +4,7 @@ const { check } = require("express-validator");
 const notesController = require("../controllers/notes-controller");
 
 const auth = require("../auth/auth");
+const rateLimiter = require("../middleware/rateLimiter");
 
 const router = express.Router();
 router.get("/", notesController.getAllNotes);
@@ -18,7 +19,7 @@ router.post(
     check("title").not().isEmpty(),
     check("description").isLength({ min: 5 }),
     check("name").isLength({ min: 2 }),
-  ],
+  ], rateLimiter,
   notesController.createNote
 );
 

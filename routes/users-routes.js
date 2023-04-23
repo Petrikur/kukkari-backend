@@ -4,6 +4,7 @@ const { check } = require('express-validator');
 const usersController = require("../controllers/users-controller")
 const router = express.Router();
 const auth = require("../auth/auth");
+const rateLimiter = require('../middleware/rateLimiter');
 
 router.post("/forgotpassword", usersController.forgotPassword)
 router.post("/:id/:token",usersController.passwordReset)
@@ -18,7 +19,7 @@ router.post(
       .normalizeEmail()
       .isEmail(),
     check('password').isLength({ min: 6 })
-  ],
+  ], rateLimiter,
   usersController.signup
 );
 
