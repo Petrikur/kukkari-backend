@@ -1,6 +1,6 @@
-const Note = require("../models/note");
+const Note = require("../models/Note");
 // const User = require("../models/User");
-const Comment = require("../models/comment")
+const Comment = require("../models/Comment")
 const mongoose = require("mongoose")
 const { validationResult } = require("express-validator");
 const HttpError = require("../models/http-error")

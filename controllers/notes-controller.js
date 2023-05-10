@@ -1,9 +1,9 @@
 // notes-controller.js
 const { validationResult } = require("express-validator");
 const mongoose = require("mongoose");
-const Note = require("../models/note");
-const User = require("../models/user");
-const Comment = require("../models/comment");
+const Note = require("../models/Note");
+const User = require("../models/User");
+const Comment = require("../models/Comment");
 const HttpError = require("../models/http-error");
 // Get comments
 const getComments = async (req, res) => {

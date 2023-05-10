@@ -5,7 +5,7 @@ const { validationResult } = require("express-validator");
 const { google } = require("googleapis");
 const OAuth2 = google.auth.OAuth2;
 // const Error = require("../models/http-error");
-const User = require("../models/user");
+const User = require("../models/User");
 const HttpError = require("../models/http-error");
 require("dotenv").config();
 

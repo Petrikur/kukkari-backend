@@ -1,8 +1,8 @@
 const { validationResult } = require("express-validator");
 const mongoose = require("mongoose");
 
-const Reservation = require("../models/reservation");
-const User = require("../models/user");
+const Reservation = require("../models/Reservation");
+const User = require("../models/User");
 const HttpError = require("../models/http-error");
 
 // Get reservations
