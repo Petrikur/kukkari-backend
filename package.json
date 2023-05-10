@@ -22,7 +22,7 @@
     "nodemon": "^2.0.21"
   },
   "scripts": {
-    "start": "node app.js",
+    "start": "node App.js",
     "test": "jest --detectOpenHandles --runInBand --forceExit ",
     "test:unit": "jest"
   }
