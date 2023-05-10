@@ -33,7 +33,7 @@ const startServer = async () => {
     await mongoose.connect(process.env.MONGO_URL);
     console.log('MongoDB connected');
   }
-  app.listen(5000);
+  app.listen( process.env.port || 5000);
   console.log('Server running');
 };
 
