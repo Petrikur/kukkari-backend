@@ -2,17 +2,17 @@ const app = require("../app");
 
 const request = require("supertest");
 
-const Note = require("../models/note");
-const User = require("../models/user");
+const Note = require("../models/Note");
+const User = require("../models/User");
 require("dotenv").config();
 
-// beforeEach(async () => {
-//   await mongoose.connect(process.env.MONGO_URL);
-// });
+beforeEach(async () => {
+  await mongoose.connect(process.env.MONGO_URL_TEST);
+});
 
-// afterEach(async () => {
-//   await mongoose.connection.close();
-// });
+afterEach(async () => {
+  await mongoose.connection.close();
+});
 
 // Test getting all notes
 describe("GET /api/notes", () => {
