@@ -229,7 +229,7 @@ const forgotPassword = async (req, res, next) => {
       html: `
         <p>Hei ${user.name},</p>
         <p>Pyysit salasanan palautusta. Klikkaa alla olevaa linkkiä palauttaaksesi salasanan:</p>
-        <a href="http://localhost:5173/resetpassword/${user.id}/${token}">Palauta salasana</a>
+        <a href=${process.env.PASSWORD_CHANGE_URL}${user.id}/${token}>Palauta salasana</a>
         <p>Tämä linkki toimii 15 minuuttia</p>
         <p>Jos et pyytänyt tätä salasanan palautusta, jätä tämä viesti huomiotta.</p>
         <p>Terveisin: </p>
