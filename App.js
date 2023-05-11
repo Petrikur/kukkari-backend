@@ -24,9 +24,7 @@ app.use((req, res, next) => {
 
 const startServer = async () => {
   await mongoose.connect(process.env.MONGO_URL_PROD);
-  console.log(process.env.MONGO_URL_PROD)
   console.log("MongoDB connected");
-
   app.listen(process.env.PORT || 5000);
   console.log("Server running");
 };
