@@ -221,7 +221,7 @@ const forgotPassword = async (req, res, next) => {
     user.resetPasswordToken = token;
     user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save();
-
+    const encodedToken = encodeURIComponent(token);
     const message = {
       from: `Kukkari ${process.env.user}`,
       to: user.email,
@@ -229,7 +229,7 @@ const forgotPassword = async (req, res, next) => {
       html: `
         <p>Hei ${user.name},</p>
         <p>Pyysit salasanan palautusta. Klikkaa alla olevaa linkkiä palauttaaksesi salasanan:</p>
-        <a href=${process.env.PASSWORDCHANGE_URL}${user.id}/${token}>Palauta salasana</a>
+        <a href=${process.env.PASSWORDCHANGE_URL}${user.id}/${encodedToken}>Palauta salasana</a>
         <p>Tämä linkki toimii 15 minuuttia</p>
         <p>Jos et pyytänyt tätä salasanan palautusta, jätä tämä viesti huomiotta.</p>
         <p>Terveisin: </p>
