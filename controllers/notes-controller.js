@@ -5,6 +5,12 @@ const Note = require("../models/Note");
 const User = require("../models/User");
 const Comment = require("../models/Comment");
 const HttpError = require("../models/http-error");
+
+let io;
+const setIo = (socketIo) => {
+  io = socketIo;
+};
+
 // Get comments
 const getComments = async (req, res) => {
   const { id } = req.params;
@@ -86,13 +92,14 @@ const createNote = async (req, res, next) => {
       description,
       creator: userId,
       name,
+      comments: [],
     });
 
     await createdNote.save({ session });
 
     const user = await User.findById(userId).session(session);
     if (!user) {
-      return next(new HttpError("Could not find user for provided id",404)) 
+      return next(new HttpError("Could not find user for provided id", 404));
     }
     user.notes.push(createdNote);
     await user.save({ session });
@@ -103,7 +110,9 @@ const createNote = async (req, res, next) => {
   } finally {
     session.endSession();
   }
+  io.emit("newNote", createdNote);
   res.status(201).json({ note: createdNote });
+
 };
 
 // DELETE Note
@@ -146,7 +155,7 @@ const deleteNote = async (req, res, next) => {
     );
     return next(error);
   }
-
+  io.emit("deleteNote", { id: noteId });
   res.status(200).json({ message: "Deleted note." });
 };
 
@@ -192,7 +201,7 @@ const updateNote = async (req, res, next) => {
     );
     return next(error);
   }
-
+  io.emit("updateNote", { noteId: note._id, note: note.toObject({ getters: true }) });
   res.status(200).json({ note: note.toObject({ getters: true }) });
 };
 
@@ -202,3 +211,4 @@ exports.getAllNotes = getAllNotes;
 exports.deleteNote = deleteNote;
 exports.updateNote = updateNote;
 exports.getComments = getComments;
+exports.setIo = setIo;

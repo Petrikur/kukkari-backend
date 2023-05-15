@@ -9,7 +9,7 @@ const rateLimiter = require("../middleware/rateLimiter");
 const router = express.Router();
 router.get("/", notesController.getAllNotes);
 
-router.get('/notes/:id/comments', notesController.getComments);
+router.get('/:id/comments', notesController.getComments);
 router.use(auth);
 router.get("/:pid", notesController.getNoteById);
 
