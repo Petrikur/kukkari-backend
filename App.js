@@ -9,6 +9,7 @@ const commentsRoutes = require("./routes/comments-routes");
 const weatherRoutes = require("./routes/weather-routes");
 const notesController = require("./controllers/notes-controller");
 const commentsController = require("./controllers/comments-controller")
+const reservationsController = require("./controllers/reservations-controller")
 require("dotenv").config();
 const http = require("http")
 const app = express();
@@ -36,6 +37,7 @@ io.on('connection', socket => {
 
   notesController.setIo(io);
   commentsController.setIo(io);
+  reservationsController.setIo(io)
 
   socket.on('disconnect', () => {
     console.log('user disconnected')

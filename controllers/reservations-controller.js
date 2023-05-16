@@ -5,6 +5,11 @@ const Reservation = require("../models/Reservation");
 const User = require("../models/User");
 const HttpError = require("../models/http-error");
 
+
+let io;
+const setIo = (socketIo) => {
+  io = socketIo;
+};
 // Get reservations
 const getAllReservations = async (req, res, next) => {
   let reservations;
@@ -72,6 +77,8 @@ const createReservation = async (req, res, next) => {
     );
     return next(error);
   }
+
+  io.emit("newReservation", createdReservations);
   res.status(201).json({ reservation: createdReservations });
 };
 
@@ -118,7 +125,7 @@ const deleteReservation = async (req, res, next) => {
     );
     return next(error);
   }
-
+  io.emit("deleteReservation", { id: reservationId });
   res
     .status(200)
     .json({ message: "Deleted reservation.", userId: reservation.creator });
@@ -127,3 +134,4 @@ const deleteReservation = async (req, res, next) => {
 exports.getAllReservations = getAllReservations;
 exports.createReservation = createReservation;
 exports.deleteReservation = deleteReservation;
+exports.setIo = setIo;
