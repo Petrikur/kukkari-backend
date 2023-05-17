@@ -8,6 +8,7 @@ const reservationSchema = new Schema({
     endDate: {type: Date,required:true},
     creator: { type: mongoose.Types.ObjectId, required: true, ref: 'User'},
     creatorName: { type: String, required: true },
+    description: {type:String}
 }, { timestamps: true });
 
 module.exports = mongoose.model('Reservation', reservationSchema);

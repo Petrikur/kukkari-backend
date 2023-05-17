@@ -38,12 +38,13 @@ const createReservation = async (req, res, next) => {
     );
   }
 
-  const { startDate, endDate, userId, creatorName } = req.body;
+  const { startDate, endDate, userId, creatorName,description } = req.body;
   const createdReservations = new Reservation({
     startDate,
     endDate,
     creator: userId,
     creatorName,
+    description
   });
 
 
