@@ -8,7 +8,6 @@ const User = require("../models/user");
 describe("POST /api/users/signup", () => {
   afterEach(async () => {
     await User.deleteMany();
-  
   });
  
 
