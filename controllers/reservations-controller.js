@@ -71,6 +71,8 @@ const createReservation = async (req, res, next) => {
     user.reservations.push(createdReservations);
     await user.save({ session: sess });
     await sess.commitTransaction();
+    io.emit("newReservation", createdReservations);
+    res.status(201).json({ reservation: createdReservations });
   } catch (err) {
     const error = new HttpError(
       "Creating reservation failed, please try again. 2",
@@ -79,8 +81,7 @@ const createReservation = async (req, res, next) => {
     return next(error);
   }
 
-  io.emit("newReservation", createdReservations);
-  res.status(201).json({ reservation: createdReservations });
+ 
 };
 
 // DELETE reservation
@@ -119,6 +120,10 @@ const deleteReservation = async (req, res, next) => {
     reservation.creator.reservations.pull(reservation);
     await reservation.creator.save({ session: sess });
     await sess.commitTransaction();
+    io.emit("deleteReservation", { id: reservationId });
+    res
+      .status(200)
+      .json({ message: "Deleted reservation.", userId: reservation.creator });
   } catch (err) {
     const error = new HttpError(
       "Something went wrong, could not delete reservation33.",
@@ -126,10 +131,7 @@ const deleteReservation = async (req, res, next) => {
     );
     return next(error);
   }
-  io.emit("deleteReservation", { id: reservationId });
-  res
-    .status(200)
-    .json({ message: "Deleted reservation.", userId: reservation.creator });
+ 
 };
 
 exports.getAllReservations = getAllReservations;

@@ -6,6 +6,8 @@ const User = require("../models/User");
 const Comment = require("../models/Comment");
 const HttpError = require("../models/http-error");
 
+
+
 let io;
 const setIo = (socketIo) => {
   io = socketIo;
@@ -94,7 +96,8 @@ const createNote = async (req, res, next) => {
       name,
       comments: [],
     });
-
+   
+   
     await createdNote.save({ session });
 
     const user = await User.findById(userId).session(session);
@@ -104,16 +107,18 @@ const createNote = async (req, res, next) => {
     user.notes.push(createdNote);
     await user.save({ session });
     await session.commitTransaction();
+    io.emit("newNoteAdd", {note: createdNote});
+    res.status(201).json({ note: createdNote });
+    session.endSession();
   } catch (err) {
     await session.abortTransaction();
     next(new HttpError("Creating note failed, please try again.", 500));
-  } finally {
-    session.endSession();
   }
-  io.emit("newNote", createdNote);
-  res.status(201).json({ note: createdNote });
+ 
+ 
 
 };
+
 
 // DELETE Note
 const deleteNote = async (req, res, next) => {
@@ -148,6 +153,8 @@ const deleteNote = async (req, res, next) => {
     note.creator.notes.pull(note);
     await note.creator.save({ session: sess });
     await sess.commitTransaction();
+    io.emit("deleteNote", { id: noteId });
+    res.status(200).json({ message: "Deleted note." });
   } catch (err) {
     const error = new HttpError(
       "Something went wrong, could not delete note.",
@@ -155,8 +162,7 @@ const deleteNote = async (req, res, next) => {
     );
     return next(error);
   }
-  io.emit("deleteNote", { id: noteId });
-  res.status(200).json({ message: "Deleted note." });
+
 };
 
 // Patch
@@ -194,6 +200,8 @@ const updateNote = async (req, res, next) => {
 
   try {
     await note.save();
+    io.emit("updateNote", { noteId: note._id, note: note.toObject({ getters: true }) });
+    res.status(200).json({ note: note.toObject({ getters: true }) });
   } catch (err) {
     const error = new HttpError(
       "Something went wrong, could not update note.",
@@ -201,8 +209,7 @@ const updateNote = async (req, res, next) => {
     );
     return next(error);
   }
-  io.emit("updateNote", { noteId: note._id, note: note.toObject({ getters: true }) });
-  res.status(200).json({ note: note.toObject({ getters: true }) });
+  
 };
 
 exports.createNote = createNote;

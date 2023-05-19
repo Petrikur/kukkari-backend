@@ -32,21 +32,23 @@ app.use((req, res, next) => {
   next();
 });
 
-io.on('connection', socket => {
-  console.log('User connected')
 
-  notesController.setIo(io);
-  commentsController.setIo(io);
-  reservationsController.setIo(io)
 
-  socket.on('disconnect', () => {
-    console.log('user disconnected')
-  })
-})
+
 
 const startServer = async () => {
   await mongoose.connect(process.env.MONGO_URL_PROD);
   console.log("MongoDB connected");
+  io.on('connection', socket => {
+    console.log('User connected')
+    notesController.setIo(io);
+    commentsController.setIo(io);
+    reservationsController.setIo(io)
+  
+    socket.on('disconnect', () => {
+      console.log('user disconnected')
+    })
+  })
   server.listen(process.env.PORT || 5000);
   console.log("Server running");
 };
@@ -82,4 +84,4 @@ startServer().catch((err) => {
   console.log(err);
 });
 
-module.exports = app;
+module.exports =  app;
