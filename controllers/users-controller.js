@@ -31,7 +31,7 @@ const getUserById = async (req, res, next) => {
 
   let user;
   try {
-    user = await User.findById(userId, "name");
+    user = await User.findById(userId);
   } catch (err) {
     const error = new HttpError(
       "Fetching user failed, please try again later.",
@@ -48,7 +48,7 @@ const getUserById = async (req, res, next) => {
     return next(error);
   }
 
-  res.json({ name: user.name });
+  res.status(200).json({ user: user });
 };
 
 // signup
@@ -56,9 +56,8 @@ const signup = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     const error = new HttpError(
-      "Invalid inputs passed, please check your data."
+      "Invalid inputs passed, please check your data.", 400
     );
-    error.statusCode = 400;
     return next(error);
   }
   const { name, email, password } = req.body;
@@ -159,7 +158,7 @@ const login = async (req, res, next) => {
   }
 
   if (!isValidPassword) {
-    const error = new HttpError("Invalid credentials, could not log you in.");
+    const error = new HttpError("Invalid credentials, could not log you in.",403);
     return next(error);
   }
 

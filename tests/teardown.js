@@ -1,6 +1,12 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
+const User = require("../models/User");
 
-module.exports = async () => {
-  await mongoose.connection.dropDatabase();
-  await mongoose.connection.close();
-};
+async function teardownTestDB() {
+  try {
+    await mongoose.connection.close();
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+module.exports = teardownTestDB;

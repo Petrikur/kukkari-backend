@@ -1,13 +1,16 @@
-const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
+const mongoose = require("mongoose");
+require("dotenv").config();
+process.env.NODE_ENV = "test";
 
-let mongoServer;
-
-module.exports = async () => {
-  mongoServer = await MongoMemoryServer.create();
-  const mongoUri = mongoServer.getUri();
-  await mongoose.connect(mongoUri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-};
+async function setupTestDB() {
+  try {
+    await mongoose.connect(process.env.MONGO_URL_TEST, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log("Test database connected");
+  } catch (err) {
+    console.log(err);
+  }
+}
+module.exports = setupTestDB;

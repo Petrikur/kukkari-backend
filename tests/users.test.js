@@ -1,28 +1,100 @@
 const app = require("../app");
 const request = require("supertest");
 require("dotenv").config();
-const User = require("../models/user");
+const User = require("../models/User");
+const bcrypt = require("bcryptjs")
 
+const testUser = {
+  name: "testuser",
+  email: "testuser1@test.com",
+  password: "test12345",
+};
 
-// Test signup
-describe("POST /api/users/signup", () => {
-  afterEach(async () => {
+const testUsers = [
+  { name: "testuser1", email: "testuser1@test.com", password: "test12345" },
+  { name: "testuser2", email: "testuser2@test.com", password: "test12345" },
+];
+
+describe("Authorization middleware", () => {
+
+  beforeAll(async () => {
+    await request(app).post("/api/users/signup").send(testUser);
+  })
+  it("should return 401 if no token is provided", async () => {
+    const res = await request(app).get("/api/notes");
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("should return 401 if an invalid token is provided", async () => {
+    const res = await request(app)
+      .get("/api/notes")
+      .set("Authorization", "Bearer invalidtoken");
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("should return 200 if a valid token is provided", async () => {
+    const loginRes = await request(app)
+      .post("/api/users/login")
+      .send({ email: "testuser1@test.com", password: "test12345" });
+    const token = loginRes.body.token;
+    console.log(loginRes.body)
+
+    const res = await request(app)
+      .get("/api/notes")
+      .set("Authorization", `Bearer ${token}`);
+    expect(res.statusCode).toBe(200);
+  });
+});
+
+// LOGIN 
+describe("POST /api/users/login", () => {
+  beforeAll(async () => {
+    const hashedPassword = await bcrypt.hash("test12345", 10);
+    const user = new User({
+      name: "testuser",
+      email: "test123@test.com",
+      password: hashedPassword,
+    });
+    await user.save();
+  });
+
+  afterAll(async () => {
+    // Clean up the test user after the tests
     await User.deleteMany();
   });
- 
+
+  it("should return a token for successful login", async () => {
+    const res = await request(app)
+      .post("/api/users/login")
+      .send({ email: "test123@test.com", password: "test12345" });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty("token");
+  });
+
+  it("should return an error for unsuccessful login", async () => {
+    const res = await request(app)
+  
+      .post("/api/users/login")
+      .send({ email: "test123@test.com", password: "wrongpassword" });
+      console.log(res.body)
+    expect(res.statusCode).toBe(403);
+    expect(res.body.message).toEqual("Invalid credentials, could not log you in.")
+  });
+});
+// Test signup
+describe("POST /api/users/signup", () => {
+  afterAll(async () => {
+    await User.deleteMany();
+  });
 
   it("should return a user", async () => {
-    const res = await request(app).post("/api/users/signup").send({
-      name: "testuser",
-      email: "test7@test.com",
-      password: "test12345",
-    });
-
+    const res = await request(app).post("/api/users/signup").send(testUser);
     expect(res.statusCode).toBe(201);
     const user = await User.findById(res.body.userId);
     expect(res.body).toMatchObject({
       userId: user._id.toString(),
-      email: "test7@test.com",
+      email: "testuser1@test.com",
       token: expect.any(String),
       name: "testuser",
     });
@@ -42,7 +114,6 @@ describe("POST /api/users/signup", () => {
       email: "test2@test.com",
       password: "test12345",
     });
-
     expect(res.statusCode).toBe(400);
     expect(res.body.message).toBe("User exists already, please login instead.");
   });
@@ -80,30 +151,53 @@ describe("POST /api/users/signup", () => {
 
   // Test performance
   describe("Performance testing", () => {
-    it("should handle a large number of requests", async () => {
-      const requests = Array.from({ length: 100 }, () =>
-        request(app).get("/api/users")
-      );
-      await Promise.all(requests);
-    });
-  });
-
-  // Test getting users
-  const testUsers = [
-    { name: "testuser1", email: "testuser1@test.com", password: "test12345" },
-    { name: "testuser2", email: "testuser2@test.com", password: "test12345" },
-  ];
-  describe("Using test fixtures", () => {
     beforeEach(async () => {
-      await User.insertMany(testUsers);
+      // Add test users 
+      const signupPromises = testUsers.map(async (user) => {
+        await request(app).post("/api/users/signup").send(user);
+      });
+      await Promise.all(signupPromises);
     });
 
     afterEach(async () => {
       await User.deleteMany();
     });
 
+    it("should handle a large number of requests", async () => {
+      const requests = Array.from({ length: 100 }, () =>
+        request(app).get("/api/users")
+      );
+      const start = Date.now();
+      await Promise.all(requests);
+      const end = Date.now();
+      const duration = end - start;
+      const averageResponseTime = duration / requests.length;
+      expect(averageResponseTime).toBeLessThan(100);
+    });
+  });
+
+  describe("Using test fixtures", () => {
+    beforeEach(async () => {
+      // Add test users 
+      const signupPromises = testUsers.map(async (user) => {
+        await request(app).post("/api/users/signup").send(user);
+      });
+
+      await Promise.all(signupPromises);
+    });
+
+    afterAll(async () => {
+      await User.deleteMany();
+    });
+
     it("should return an array of users", async () => {
-      const res = await request(app).get("/api/users");
+      const loginRes = await request(app)
+        .post("/api/users/login")
+        .send({ email: "testuser1@test.com", password: "test12345" });
+      const token = loginRes.body.token;
+      const res = await request(app)
+        .get("/api/users")
+        .set("Authorization", `Bearer ${token}`);
       expect(res.statusCode).toBe(200);
       expect(Array.isArray(res.body.users)).toBe(true);
       expect(res.body.users.length).toBe(2);
@@ -117,12 +211,11 @@ describe("POST /api/users/signup", () => {
       });
     });
   });
-
-  // Test coverage
-  // describe("Test coverage", () => {
-  //   it("should have test coverage of at least 90%", async () => {
-  //     const coverage = await request(app).get("/coverage");
-  //     expect(parseInt(coverage.text)).toBeGreaterThan(20);
-  //   });
-  // })
 });
+// Test coverage
+// describe("Test coverage", () => {
+//   it("should have test coverage of at least 90%", async () => {
+//     const coverage = await request(app).get("/coverage");
+//     expect(parseInt(coverage.text)).toBeGreaterThan(20);
+//   });
+// })

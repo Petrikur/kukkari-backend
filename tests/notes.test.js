@@ -1,21 +1,14 @@
 const app = require("../app");
-
 const request = require("supertest");
-
 const Note = require("../models/Note");
 const User = require("../models/User");
 require("dotenv").config();
 
-beforeEach(async () => {
-  await mongoose.connect(process.env.MONGO_URL_TEST);
-});
 
-afterEach(async () => {
-  await mongoose.connection.close();
-});
 
 // Test getting all notes
 describe("GET /api/notes", () => {
+
   it("should return all notes", async () => {
     const res = await request(app).get("/api/notes");
     expect(res.statusCode).toBe(200);
@@ -32,16 +25,12 @@ describe("GET /api/notes/:id", () => {
       email: "test3@test.com",
       password: "test12345",
     };
-
     const authRes = await request(app).post("/api/users/login").send(user);
     const authToken = authRes.body.token;
-
     const headers = {
       Authorization: `Bearer ${authToken}`,
     };
-
     const res = await request(app).get("/api/notes/640dd3151ee9af45cd99920f").set(headers);
-
     expect(res.statusCode).toBe(200);
     expect(res.body.note.description).toBe("description test");
   });

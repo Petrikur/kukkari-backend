@@ -7,10 +7,10 @@ const auth = require("../auth/auth");
 const rateLimiter = require("../middleware/rateLimiter");
 
 const router = express.Router();
+router.use(auth);
 router.get("/", notesController.getAllNotes);
 
 router.get('/:id/comments', notesController.getComments);
-router.use(auth);
 router.get("/:pid", notesController.getNoteById);
 
 router.post(

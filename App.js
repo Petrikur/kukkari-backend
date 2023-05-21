@@ -37,8 +37,12 @@ app.use((req, res, next) => {
 
 
 const startServer = async () => {
-  await mongoose.connect(process.env.MONGO_URL_PROD);
-  console.log("MongoDB connected");
+  let mongoUrl = process.env.MONGO_URL_PROD;
+  if (process.env.NODE_ENV === "test") {
+    mongoUrl = process.env.MONGO_URL_TEST;
+  }
+  await mongoose.connect(mongoUrl);
+  
   io.on('connection', socket => {
     console.log('User connected')
     notesController.setIo(io);
