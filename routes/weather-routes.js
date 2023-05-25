@@ -4,18 +4,20 @@ const NodeCache = require("node-cache");
 const router = express.Router();
 require("dotenv").config();
 
-const cache = new NodeCache({ stdTTL: 1800 }); 
+const cache = new NodeCache({ stdTTL: 1800 });
 
 router.get("/", async (req, res) => {
-  const city = process.env.city
+  const city = process.env.city;
   const key = `weather-${city}`;
   const cachedData = cache.get(key);
   if (cachedData) {
     console.log(`Retrieving cached data for ${city}`);
     return res.json(cachedData);
   }
+  const lat = process.env.lat;
+  const lon = process.env.lon;
   console.log(`Fetching weather data for ${city}`);
-  const url = `http://api.openweathermap.org/data/2.5/forecast?q=${city}&lang=fi&units=metric&appid=${process.env.OW_APIKEY}`;
+  const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&appid=${process.env.OW_APIKEY}&units=metric&lang=fi`;
   try {
     const response = await axios.get(url);
     const data = response.data;
