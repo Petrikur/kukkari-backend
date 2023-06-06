@@ -24,11 +24,12 @@ router.post("/", rateLimiter, upload.single("image"), async (req, res) => {
   }
 
   try {
-    const userId = req.body.userId; 
-    const imageName = `${userId}_${uuidv4()}_${req.body.name}`.trim(); 
+    const userId = req.body.userId;
+    const imageName = `${userId}_${uuidv4()}_${req.body.name}`.trim();
     const compressedImage = await sharp(req.file.buffer)
-      .resize(800) 
-      .jpeg({ quality: 80 }) 
+      .rotate() 
+      .resize(800)
+      .jpeg({ quality: 80 })
       .toBuffer();
 
     const params = {
@@ -42,7 +43,6 @@ router.post("/", rateLimiter, upload.single("image"), async (req, res) => {
         console.error("Error uploading the image:", err);
         res.status(500).json({ error: "Image upload failed" });
       } else {
-        // console.log("Image uploaded successfully:", data.Location);
         res.json({
           message: "Image uploaded successfully",
           imageUrl: data.Location,
