@@ -7,9 +7,11 @@ const notesRoutes = require("./routes/notes-routes");
 const reservationRoutes = require("./routes/reservation-routes");
 const commentsRoutes = require("./routes/comments-routes");
 const weatherRoutes = require("./routes/weather-routes");
+const imagesRoutes = require("./routes/images-routes")
 const notesController = require("./controllers/notes-controller");
 const commentsController = require("./controllers/comments-controller")
 const reservationsController = require("./controllers/reservations-controller")
+
 require("dotenv").config();
 const http = require("http")
 const app = express();
@@ -20,7 +22,7 @@ const io = require('socket.io')(server, {
     methods: ['GET', 'POST', 'PATCH'],
   }
 });
-
+app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -32,17 +34,13 @@ app.use((req, res, next) => {
   next();
 });
 
-
-
-
-
 const startServer = async () => {
   let mongoUrl = process.env.MONGO_URL_PROD;
   if (process.env.NODE_ENV === "test") {
     mongoUrl = process.env.MONGO_URL_TEST;
   }
   await mongoose.connect(mongoUrl);
-  
+
   io.on('connection', socket => {
     console.log('User connected')
     notesController.setIo(io);
@@ -74,6 +72,8 @@ app.use("/api/reservations", reservationRoutes);
 app.use("/api/notes", notesRoutes);
 app.use("/api/comments", commentsRoutes);
 app.use("/api/weather", weatherRoutes);
+app.use("/api/images", imagesRoutes);
+
 
 // Errors
 app.use((error, req, res, next) => {
