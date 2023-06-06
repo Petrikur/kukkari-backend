@@ -15,7 +15,9 @@ Reserve Cabin: Users can easily view the calendar and make reservation or cancel
 
 Notes: Users can create and view notes about anything related to the cabin. Additionally, they can also comment on notes to engage in discussions with other users.
 
-Gallery: Users can view a gallery of photos of the cabin, including both interior and exterior shots.
+Gallery: Users can view a gallery of photos of the cabin, including both interior and exterior shots and also upload new images which are stored in AWS S3.
+
+Own account page: Users can change password, see their reservations etc. And opt in for notifications if someone creates new reservation etc.
 
 More coming...
 

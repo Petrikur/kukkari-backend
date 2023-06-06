@@ -9,6 +9,36 @@ const User = require("../models/User");
 const HttpError = require("../models/http-error");
 require("dotenv").config();
 
+
+const getEmailNotifications = async (req, res, next) => {
+  const userId = req.params.userId;
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({ emailNotifications: user.emailNotifications });
+  } catch (error) {
+    console.error("Failed to fetch email notifications:", error);
+    res.status(500).json({ message: "Failed to fetch email notifications" });
+  }
+};
+
+// Change notifcation setting for user 
+const updateEmailNotifications = async (req, res, next) => {
+  const userId = req.params.userId;
+  const { emailNotifications } = req.body;
+
+  try {
+    const user = await User.findByIdAndUpdate(userId, { emailNotifications }, { new: true });
+    res.status(200).json({ user });
+  } catch (error) {
+    console.error("Failed to update email notifications:", error);
+    res.status(500).json({ message: "Failed to update email notifications." });
+  }
+};
+
 // get users
 const getUsers = async (req, res, next) => {
   let users;
@@ -299,3 +329,5 @@ exports.getUserById = getUserById;
 exports.getUsers = getUsers;
 exports.signup = signup;
 exports.login = login;
+exports.updateEmailNotifications = updateEmailNotifications
+exports.getEmailNotifications = getEmailNotifications

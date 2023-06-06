@@ -8,6 +8,8 @@ const rateLimiter = require('../middleware/rateLimiter');
 
 router.post("/forgotpassword", usersController.forgotPassword)
 router.post("/:id/:token",usersController.passwordReset)
+router.patch('/:userId/email-notifications',rateLimiter, usersController.updateEmailNotifications);
+router.get("/:userId/email-notifications", usersController.getEmailNotifications);
 
   router.post(
     '/signup',
