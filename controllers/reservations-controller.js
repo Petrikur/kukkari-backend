@@ -50,7 +50,9 @@ const createReservation = async (req, res, next) => {
   for (const user of users) {
     const subject = "Uusi kukkarin Varaus";
     let dateRange;
-  
+    if (user.name === creatorName) {
+      continue;
+    }
     if (startDate.toString() === endDate.toString()) {
       dateRange = new Date(startDate).toLocaleDateString("en-GB");
     } else {

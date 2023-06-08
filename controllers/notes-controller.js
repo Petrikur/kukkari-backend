@@ -98,6 +98,9 @@ const createNote = async (req, res, next) => {
 
     const users = await User.find({ noteNotifications: true }).exec();
     for (const user of users) {
+      if (user.name === name) {
+        continue;
+      }
       const subject = "Uusi kukkarin muistiinpano.";
       const html = `<p>Hei ${user.name}, ${createdNote.name} on tehnyt uuden muistiinpanon kukkarisivulle. Käy lukemassa!</p> <p>Terveisin</p><p>Kukkarin insinööritiimi</p>`;
       await sendEmail(user, subject, html);
