@@ -86,7 +86,7 @@ const createNote = async (req, res, next) => {
   const session = await mongoose.startSession();
   let createdNote;
   try {
-    session.startTransaction();
+ 
 
     createdNote = new Note({
       title,
@@ -96,16 +96,18 @@ const createNote = async (req, res, next) => {
       comments: [],
     });
 
-    const users = await User.find({ noteNotifications: true }).exec();
+    const users = await User.find({
+      noteNotifications: true,
+      _id: { $ne: userId }
+    }).exec();
+
     for (const user of users) {
-      if (user.name === name) {
-        continue;
-      }
       const subject = "Uusi kukkarin muistiinpano.";
       const html = `<p>Hei ${user.name}, ${createdNote.name} on tehnyt uuden muistiinpanon kukkarisivulle. Käy lukemassa!</p> <p>Terveisin</p><p>Kukkarin insinööritiimi</p>`;
       await sendEmail(user, subject, html);
     }
 
+    session.startTransaction();
     const user = await User.findById(userId).session(session);
     if (!user) {
       return next(new HttpError("Could not find user for provided id", 404));

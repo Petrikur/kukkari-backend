@@ -46,7 +46,11 @@ const createReservation = async (req, res, next) => {
     creatorName,
     description
   });
-  const users = await User.find({ reservationNotifications: true }).exec();
+  const users = await User.find({
+    reservationNotifications: true,
+    _id: { $ne: userId } 
+  }).exec();
+
   for (const user of users) {
     const subject = "Uusi kukkarin Varaus";
     let dateRange;
