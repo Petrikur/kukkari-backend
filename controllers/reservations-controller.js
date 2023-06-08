@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const Reservation = require("../models/Reservation");
 const User = require("../models/User");
 const HttpError = require("../models/http-error");
-
+const {sendEmail} = require("../services/emailService")
 
 let io;
 const setIo = (socketIo) => {
@@ -46,8 +46,22 @@ const createReservation = async (req, res, next) => {
     creatorName,
     description
   });
-
-
+  const users = await User.find({ reservationNotifications: true }).exec();
+  for (const user of users) {
+    const subject = "Uusi kukkarin Varaus";
+    let dateRange;
+  
+    if (startDate.toString() === endDate.toString()) {
+      dateRange = new Date(startDate).toLocaleDateString("en-GB");
+    } else {
+      const formattedStartDate = new Date(startDate).toLocaleDateString("en-GB");
+      const formattedEndDate = new Date(endDate).toLocaleDateString("en-GB");
+      dateRange = `${formattedStartDate} - ${formattedEndDate}`;
+    }
+  
+    const html = `<p>Hei ${user.name}, ${creatorName} on tehnyt kukkariin uuden varauksen. Aika: ${dateRange}.</p> <p>Terveisin</p><p>Kukkarin insinööritiimi</p>`;
+    await sendEmail(user, subject, html);
+  }
   let user;
   try {
     user = await User.findById(userId);
@@ -80,8 +94,6 @@ const createReservation = async (req, res, next) => {
     );
     return next(error);
   }
-
- 
 };
 
 // DELETE reservation

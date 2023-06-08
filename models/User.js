@@ -7,7 +7,11 @@ const userSchema = new Schema(
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true, minlength: 6 },
-    emailNotifications: {
+    noteNotifications: {
+      type: Boolean,
+      default: false,
+    },
+    reservationNotifications: {
       type: Boolean,
       default: false,
     },

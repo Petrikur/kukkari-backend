@@ -5,8 +5,7 @@ const Note = require("../models/Note");
 const User = require("../models/User");
 const Comment = require("../models/Comment");
 const HttpError = require("../models/http-error");
-
-
+const {sendEmail} = require("../services/emailService")
 
 let io;
 const setIo = (socketIo) => {
@@ -96,9 +95,13 @@ const createNote = async (req, res, next) => {
       name,
       comments: [],
     });
-   
-   
-    await createdNote.save({ session });
+
+    const users = await User.find({ noteNotifications: true }).exec();
+    for (const user of users) {
+      const subject = "Uusi kukkarin muistiinpano.";
+      const html = `<p>Hei ${user.name}, ${createdNote.name} on tehnyt uuden muistiinpanon kukkarisivulle. Käy lukemassa!</p> <p>Terveisin</p><p>Kukkarin insinööritiimi</p>`;
+      await sendEmail(user, subject, html);
+    }
 
     const user = await User.findById(userId).session(session);
     if (!user) {
@@ -106,19 +109,16 @@ const createNote = async (req, res, next) => {
     }
     user.notes.push(createdNote);
     await user.save({ session });
+    await createdNote.save({ session });
     await session.commitTransaction();
-    io.emit("newNoteAdd", {note: createdNote});
+    io.emit("newNoteAdd", { note: createdNote });
     res.status(201).json({ note: createdNote });
     session.endSession();
   } catch (err) {
     await session.abortTransaction();
     next(new HttpError("Creating note failed, please try again.", 500));
   }
- 
- 
-
 };
-
 
 // DELETE Note
 const deleteNote = async (req, res, next) => {
@@ -148,7 +148,7 @@ const deleteNote = async (req, res, next) => {
   try {
     const sess = await mongoose.startSession();
     sess.startTransaction();
-    await Comment.deleteMany({ noteId: noteId }, { session: sess }); // Delete comments associated with note
+    await Comment.deleteMany({ noteId: noteId }, { session: sess });
     await Note.deleteOne({ _id: noteId }, { session: sess });
     note.creator.notes.pull(note);
     await note.creator.save({ session: sess });
@@ -162,7 +162,6 @@ const deleteNote = async (req, res, next) => {
     );
     return next(error);
   }
-
 };
 
 // Patch
@@ -200,7 +199,10 @@ const updateNote = async (req, res, next) => {
 
   try {
     await note.save();
-    io.emit("updateNote", { noteId: note._id, note: note.toObject({ getters: true }) });
+    io.emit("updateNote", {
+      noteId: note._id,
+      note: note.toObject({ getters: true }),
+    });
     res.status(200).json({ note: note.toObject({ getters: true }) });
   } catch (err) {
     const error = new HttpError(
@@ -209,7 +211,6 @@ const updateNote = async (req, res, next) => {
     );
     return next(error);
   }
-  
 };
 
 exports.createNote = createNote;

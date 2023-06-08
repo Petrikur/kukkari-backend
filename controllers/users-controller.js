@@ -1,14 +1,10 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
 const { validationResult } = require("express-validator");
-const { google } = require("googleapis");
-const OAuth2 = google.auth.OAuth2;
-// const Error = require("../models/http-error");
 const User = require("../models/User");
 const HttpError = require("../models/http-error");
 require("dotenv").config();
-
+const { sendEmail } = require("../services/emailService");
 
 const getEmailNotifications = async (req, res, next) => {
   const userId = req.params.userId;
@@ -18,21 +14,36 @@ const getEmailNotifications = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    res.status(200).json({ emailNotifications: user.emailNotifications });
+
+    const { noteNotifications, reservationNotifications } = user;
+
+    res
+      .status(200)
+      .json({
+        noteEmailNotifications: noteNotifications,
+        reservationEmailNotifications: reservationNotifications,
+      });
   } catch (error) {
     console.error("Failed to fetch email notifications:", error);
     res.status(500).json({ message: "Failed to fetch email notifications" });
   }
 };
 
-// Change notifcation setting for user 
+// Change notifcation setting for user
 const updateEmailNotifications = async (req, res, next) => {
   const userId = req.params.userId;
-  const { emailNotifications } = req.body;
+  const { noteEmailNotifications, reservationEmailNotifications } = req.body;
 
   try {
-    const user = await User.findByIdAndUpdate(userId, { emailNotifications }, { new: true });
-    res.status(200).json({ user });
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        noteNotifications: noteEmailNotifications,
+        reservationNotifications: reservationEmailNotifications,
+      },
+      { new: true }
+    );
+    res.status(200).json({ message: "Updated" });
   } catch (error) {
     console.error("Failed to update email notifications:", error);
     res.status(500).json({ message: "Failed to update email notifications." });
@@ -86,7 +97,8 @@ const signup = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     const error = new HttpError(
-      "Invalid inputs passed, please check your data.", 400
+      "Invalid inputs passed, please check your data.",
+      400
     );
     return next(error);
   }
@@ -188,7 +200,10 @@ const login = async (req, res, next) => {
   }
 
   if (!isValidPassword) {
-    const error = new HttpError("Invalid credentials, could not log you in.",403);
+    const error = new HttpError(
+      "Invalid credentials, could not log you in.",
+      403
+    );
     return next(error);
   }
 
@@ -215,34 +230,11 @@ const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
 
-    const oauth2Client = new OAuth2(
-      process.env.OAUTH_CLIENT_ID,
-      process.env.OAUTH_SECRET
-    );
-
-    oauth2Client.setCredentials({
-      refresh_token: process.env.OAUTH_REFRESH_TOKEN,
-    });
-    const accessToken = oauth2Client.getAccessToken();
-
-    // Check if user with given email exists
     const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(404).send({ error: "User not found" });
     }
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        type: "OAuth2",
-        user: process.env.user,
-        clientId: process.env.OAUTH_CLIENT_ID,
-        clientSecret: process.env.OAUTH_SECRET,
-        refreshToken: process.env.OAUTH_REFRESH_TOKEN,
-        accessToken: accessToken,
-      },
-    });
-
     // Generate JWT token with 15 minutes expiration time
     const jwtToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
       expiresIn: "15m",
@@ -250,33 +242,25 @@ const forgotPassword = async (req, res, next) => {
     const token = encodeURIComponent(jwtToken);
     user.resetPasswordToken = token;
     user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
-    await user.save();
-    const message = {
-      from: `Kukkari ${process.env.user}`,
-      to: user.email,
-      subject: "Kukkari Salasanan palautus pyyntö",
-      html: `
-        <p>Hei ${user.name},</p>
-        <p>Pyysit salasanan palautusta. Klikkaa alla olevaa linkkiä palauttaaksesi salasanan:</p>
-        <a href=${process.env.PASSWORDCHANGE_URL}${user.id}/${token}>Palauta salasana</a>
-        <p>Tämä linkki toimii 15 minuuttia</p>
-        <p>Jos et pyytänyt tätä salasanan palautusta, jätä tämä viesti huomiotta.</p>
-        <p>Terveisin: </p>
-        <p>Kukkarin  insinööritiimi</p>
-      `,
-    };
 
-    try {
-      transporter.sendMail(message, (error, info) => {
-        if (error) {
-          console.error(error);
-        } else {
-          console.log("Email sent: " + info.response);
-        }
-      });
-    } catch (err) {
-      console.log(err);
-    }
+    await user.save();
+
+    const passwordResetUrl = `${process.env.PASSWORDCHANGE_URL}${user.id}/${token}`;
+    const passwordResetEmail = `
+    <p>Hei ${user.name},</p>
+    <p>Pyysit salasanan palautusta. Klikkaa alla olevaa linkkiä palauttaaksesi salasanan:</p>
+    <a href=${passwordResetUrl}>Palauta salasana</a>
+    <p>Tämä linkki toimii 15 minuuttia</p>
+    <p>Jos et pyytänyt tätä salasanan palautusta, jätä tämä viesti huomiotta.</p>
+    <p>Terveisin:</p>
+    <p>Kukkarin insinööritiimi</p>
+  `;
+
+    await sendEmail(
+      user,
+      "Kukkari salasanan palautus pyyntö",
+      passwordResetEmail
+    );
 
     res.status(200).send({ message: "Salasanan palautus linkki lähetetty" });
   } catch (error) {
@@ -300,7 +284,7 @@ const passwordReset = async (req, res, next) => {
   try {
     const { id, token } = req.params;
     const { password } = req.body;
-    
+
     const user = await User.findOne({ resetPasswordToken: token });
 
     if (!user) {
@@ -329,5 +313,5 @@ exports.getUserById = getUserById;
 exports.getUsers = getUsers;
 exports.signup = signup;
 exports.login = login;
-exports.updateEmailNotifications = updateEmailNotifications
-exports.getEmailNotifications = getEmailNotifications
+exports.updateEmailNotifications = updateEmailNotifications;
+exports.getEmailNotifications = getEmailNotifications;
